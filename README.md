@@ -33,9 +33,7 @@
 - $ ./app
 - $ node dist/app.js
 
-
-     `Given no parameters, return the latest portfolio value per token in USD`
-
+`Given no parameters, return the latest portfolio value per token in USD`
 
 ```
 [
@@ -68,7 +66,7 @@ time elapsed =>  2:13  minute
 - $ ./app --token BTC
 - $ node dist/app.js --token BTC
 
-    `Given a token, return the latest portfolio value for that token in USD`
+`Given a token, return the latest portfolio value for that token in USD`
 
 ```
 {
@@ -86,9 +84,9 @@ time elapsed =>  2:16  minute
 - $ ./app --date 10/25/2019 
 - $ node dist/app.js --date 10/25/2019 
 
-    `MM/DD/YYYY`
+`MM/DD/YYYY`
 
-    `Given a date, return the portfolio value per token in USD on that date`
+`Given a date, return the portfolio value per token in USD on that date`
 
 ```
 [
@@ -130,9 +128,9 @@ time elapsed =>  2:13  minute
 - $ ./app --date 10/25/2019 --token BTC
 - $ node dist/app.js --date 10/25/2019 --token BTC
 
-    `MM/DD/YYYY`
+`MM/DD/YYYY`
 
-    `Given a date and a token, return the portfolio value of that token in USD on that date`
+`Given a date and a token, return the portfolio value of that token in USD on that date`
 
 ```
 [
