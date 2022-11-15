@@ -35,7 +35,7 @@
 
      `Given no parameters, return the latest portfolio value per token in USD`
 
-```JSON
+```
 [
     {
         timestamp: '1571967208',
@@ -68,7 +68,7 @@ time elapsed =>  2:13  minute
 
     `Given a token, return the latest portfolio value for that token in USD`
 
-```JSON
+```
 {
   timestamp: '1571967208',
   transaction_type: 'DEPOSIT',
@@ -132,7 +132,7 @@ time elapsed =>  2:13  minute
 
     `Given a date and a token, return the portfolio value of that token in USD on that date`
 
-```JSON
+```
 [
     {
         timestamp: '1571967208',
