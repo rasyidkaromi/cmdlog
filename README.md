@@ -88,7 +88,7 @@ time elapsed =>  2:16  minute
 
     `Given a date, return the portfolio value per token in USD on that date`
 
-```JSON
+```
 [
     {
         timestamp: '1571967208',
