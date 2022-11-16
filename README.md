@@ -9,6 +9,7 @@
 
 - install depedencies npm install or yarn
 - download csv file [transactions.csv](https://drive.google.com/file/d/1DY5uUfSqHt1AtbWCuaKJBlbnwlvFI7YS) and save the file in the source folder
+- https://min-api.cryptocompare.com/ api key
 - npm run build 
 - npm build-bin
 
