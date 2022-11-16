@@ -27,7 +27,6 @@
   { Token: 'ETH', Value: '0.683640', USD: '821.0106216' },
   { Token: 'XRP', Value: '0.693272', USD: '0.2553320776' }
 ]
-time elapsed =>  0:23  minute
 ```
 
 - $ ./app --token BTC
@@ -37,7 +36,6 @@ time elapsed =>  0:23  minute
 
 ```
 [ { Token: 'BTC', Value: '0.298660', USD: '4901.0225464' } ]
-time elapsed =>  0:20  minute
 ```
 
 - $ ./app --date 10/25/2019 
@@ -81,7 +79,6 @@ time elapsed =>  0:20  minute
   },
     ... more items
 ]
-time elapsed =>  0:24  minute
 ```
 
 - $ ./app --date 10/25/2019 --token BTC
@@ -119,7 +116,6 @@ time elapsed =>  0:24  minute
   },
     ... more items
 ]
-time elapsed =>  0:21  minute
 ```
 ------------------------------------------------------------
 
