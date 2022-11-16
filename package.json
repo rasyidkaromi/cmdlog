@@ -4,17 +4,16 @@
   "description": "",
   "scripts": {
     "build": "tsc",
-    "build-bin": "npm run build && npx pkg --output app --options expose-gc,max_old_space_size=8096 dist/app.js",
+    "build-bin": "npm run build && npx pkg --output app dist/app.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:dev": "npx nodemon src/app.ts",
-    "start": "npm run build && node dist/app.js",
+    "start": "npm run build && dist/app.js",
     "test": "jest",
     "test:watch": "jest --watch"
   },
   "author": "",
   "dependencies": {
-    "@types/node-fetch": "^2.6.2",
-    "csv-parse": "^5.3.2"
+    "@types/node-fetch": "^2.6.2"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",

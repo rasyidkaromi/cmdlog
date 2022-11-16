@@ -1,6 +1,5 @@
 
 import fs from 'fs';
-import { parse } from 'csv-parse';
 import fetch from 'node-fetch'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
@@ -8,14 +7,6 @@ import { hideBin } from 'yargs/helpers'
 
 const key = '5bc4dc7bda2b1449159e5db643d7123b56018896db1702bcb5aab9c442610305'
 const file = 'transactions.csv'
-
-type streamBufferType = {
-    timestamp: string
-    transaction_type: string
-    token: string
-    amount: string
-    amountUSD: string
-}
 
 type allStreamBufferType = {
     timestamp: string
@@ -27,86 +18,60 @@ type allStreamBufferType = {
 class Service {
     private args: any
     private serviceApi: string
+    private serviceApiBTCwithDate: string
+    private serviceApiETHwithDate: string
+    private serviceApiXRPwithDate: string
     private serviceStreamCSVData: any
     private timeStart: number
 
-    private allStreamBufferArray: Array<allStreamBufferType>
-    private allStreamBufferObject: allStreamBufferType
-    private allStreamBTCBufferArray: Array<allStreamBufferType>
-    private allStreamETHBufferArray: Array<allStreamBufferType>
-    private allStreamXRPBufferArray: Array<allStreamBufferType>
-
-    private streamBTCBufferJson: streamBufferType
-    private streamETHBufferJson: streamBufferType
-    private streamXRPBufferJson: streamBufferType
+    private streamANYBuffer: allStreamBufferType
+    private streamBTCBuffer: allStreamBufferType
+    private streamETHBuffer: allStreamBufferType
+    private streamXRPBuffer: allStreamBufferType
 
 
     constructor() {
         this.args = yargs(hideBin(process.argv)).argv;
         this.serviceApi = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=ETH,BTC,XRP&tsyms=USD&api_key=' + key
-        this.serviceStreamCSVData = fs.createReadStream(file).pipe(parse({ delimiter: ",", from_line: 2 }))
+        this.serviceApiBTCwithDate = 'https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=24&api_key=' + key + '&toTs='
+        this.serviceApiETHwithDate = 'https://min-api.cryptocompare.com/data/v2/histohour?fsym=ETH&tsym=USD&limit=24&api_key=' + key + '&toTs='
+        this.serviceApiXRPwithDate = 'https://min-api.cryptocompare.com/data/v2/histohour?fsym=XRP&tsym=USD&limit=24&api_key=' + key + '&toTs='
+
+        this.serviceStreamCSVData = fs.createReadStream(file)
         this.timeStart = new Date().getTime();
 
-        this.allStreamBufferArray = []
-        this.allStreamBTCBufferArray = []
-        this.allStreamETHBufferArray = []
-        this.allStreamXRPBufferArray = []
-        this.allStreamBufferObject = {} as allStreamBufferType
-
-        this.streamBTCBufferJson = {} as streamBufferType
-        this.streamETHBufferJson = {} as streamBufferType
-        this.streamXRPBufferJson = {} as streamBufferType
+        this.streamANYBuffer = {
+            timestamp: '0',
+            transaction_type: '',
+            token: '',
+            amount: '',
+        } as allStreamBufferType
+        this.streamBTCBuffer = {
+            timestamp: '0',
+            transaction_type: '',
+            token: '',
+            amount: '',
+        } as allStreamBufferType
+        this.streamETHBuffer = {
+            timestamp: '0',
+            transaction_type: '',
+            token: '',
+            amount: '',
+        } as allStreamBufferType
+        this.streamXRPBuffer = {
+            timestamp: '0',
+            transaction_type: '',
+            token: '',
+            amount: '',
+        } as allStreamBufferType
 
     }
 
     async initCmnd() {
         this.logInfo()
-        this.allStreamBufferArray = []
-        this.allStreamBTCBufferArray = []
-        this.allStreamETHBufferArray = []
-        this.allStreamXRPBufferArray = []
-
-        this.serviceStreamCSVData.on('data', (data: any[]) => {
-
-            this.allStreamBufferObject = {} as allStreamBufferType
-            this.streamBTCBufferJson = {} as streamBufferType
-            this.streamETHBufferJson = {} as streamBufferType
-            this.streamXRPBufferJson = {} as streamBufferType
-
-
-            this.allStreamBufferObject.timestamp = data[0]
-            this.allStreamBufferObject.transaction_type = data[1]
-            this.allStreamBufferObject.token = data[2]
-            this.allStreamBufferObject.amount = data[3]
-            this.allStreamBufferArray.push(this.allStreamBufferObject)
-
-            switch (data[2]) {
-                case 'BTC':
-                    this.streamBTCBufferJson.timestamp = data[0]
-                    this.streamBTCBufferJson.transaction_type = data[1]
-                    this.streamBTCBufferJson.token = data[2]
-                    this.streamBTCBufferJson.amount = data[3]
-                    this.allStreamBTCBufferArray.push(this.streamBTCBufferJson)
-                    break;
-                case 'ETH':
-                    this.streamETHBufferJson.timestamp = data[0]
-                    this.streamETHBufferJson.transaction_type = data[1]
-                    this.streamETHBufferJson.token = data[2]
-                    this.streamETHBufferJson.amount = data[3]
-                    this.allStreamETHBufferArray.push(this.streamETHBufferJson)
-                    break;
-                case 'XRP':
-                    this.streamXRPBufferJson.timestamp = data[0]
-                    this.streamXRPBufferJson.transaction_type = data[1]
-                    this.streamXRPBufferJson.token = data[2]
-                    this.streamXRPBufferJson.amount = data[3]
-                    this.allStreamXRPBufferArray.push(this.streamXRPBufferJson)
-                    break;
-            }
-        })
 
         if (this.args.token && this.args.date) {
-            let resultTokenandData: any = await this.getfromTokenandDate()
+            let resultTokenandData: any = await this.getfromTokenDate()
             console.log(resultTokenandData)
             this.timeLapse()
             return
@@ -124,162 +89,227 @@ class Service {
             return
         }
 
-        let resltLatest = await this.getLatest()
+        let resltLatest = await this.getLates()
         console.log(resltLatest)
         this.timeLapse()
         return
 
     }
 
-    private async getLatest() {
-
-        this.streamBTCBufferJson = {} as streamBufferType
-        this.streamETHBufferJson = {} as streamBufferType
-        this.streamXRPBufferJson = {} as streamBufferType
-
+    private async getLates() {
         let localBuffer: any = []
         return new Promise(async (resolve) => {
-            this.serviceStreamCSVData.on('close', async () => {
+            let priceData = await this.fetchUsd()
+            if (priceData.result) {
+                this.serviceStreamCSVData.on('data', (data: any[]) => {
 
-                let btcLates = this.allStreamBTCBufferArray.reduce((pre, current) => Number(pre.timestamp) > Number(current.timestamp) ? pre : current);
-                let ethLates = this.allStreamETHBufferArray.reduce((pre, current) => Number(pre.timestamp) > Number(current.timestamp) ? pre : current);
-                let xrpLates = this.allStreamXRPBufferArray.reduce((pre, current) => Number(pre.timestamp) > Number(current.timestamp) ? pre : current);
+                    data.toString().split(/\n/).map((lines: any, i) => {
+                        let line = lines.split(',');
+                        if (line[2] === 'BTC' && Number(line[0]) > Number(this.streamBTCBuffer.timestamp)) {
+                            this.streamBTCBuffer.timestamp = line[0]
+                            this.streamBTCBuffer.transaction_type = line[1]
+                            this.streamBTCBuffer.token = line[2]
+                            this.streamBTCBuffer.amount = line[3]
+                        }
+                        if (line[2] === 'ETH' && Number(line[0]) > Number(this.streamETHBuffer.timestamp)) {
+                            this.streamETHBuffer.timestamp = line[0]
+                            this.streamETHBuffer.transaction_type = line[1]
+                            this.streamETHBuffer.token = line[2]
+                            this.streamETHBuffer.amount = line[3]
+                        }
+                        if (line[2] === 'XRP' && Number(line[0]) > Number(this.streamXRPBuffer.timestamp)) {
+                            this.streamXRPBuffer.timestamp = line[0]
+                            this.streamXRPBuffer.transaction_type = line[1]
+                            this.streamXRPBuffer.token = line[2]
+                            this.streamXRPBuffer.amount = line[3]
+                        }
+                    })
 
-                let priceData = await this.fetchUsd()
-                if (priceData.result) {
+                })
+                this.serviceStreamCSVData.on('close', async () => {
 
-                    this.streamBTCBufferJson.timestamp = btcLates.timestamp
-                    this.streamBTCBufferJson.transaction_type = btcLates.transaction_type
-                    this.streamBTCBufferJson.token = btcLates.token
-                    this.streamBTCBufferJson.amount = btcLates.amount
-                    this.streamBTCBufferJson.amountUSD = (Number(btcLates.amount) * priceData.data.BTC.USD).toString()
+                    resolve([{
+                        Token: 'BTC',
+                        Value: this.streamBTCBuffer.amount,
+                        USD: (Number(this.streamBTCBuffer.amount) * this.latestPriceTokenType(this.streamBTCBuffer.token, priceData.data)).toString()
+                    }, {
+                        Token: 'ETH',
+                        Value: this.streamETHBuffer.amount,
+                        USD: (Number(this.streamETHBuffer.amount) * this.latestPriceTokenType(this.streamETHBuffer.token, priceData.data)).toString()
+                    }, {
+                        Token: 'XRP',
+                        Value: this.streamXRPBuffer.amount,
+                        USD: (Number(this.streamXRPBuffer.amount) * this.latestPriceTokenType(this.streamXRPBuffer.token, priceData.data)).toString()
+                    }])
 
-                    this.streamETHBufferJson.timestamp = ethLates.timestamp
-                    this.streamETHBufferJson.transaction_type = ethLates.transaction_type
-                    this.streamETHBufferJson.token = ethLates.token
-                    this.streamETHBufferJson.amount = ethLates.amount
-                    this.streamETHBufferJson.amountUSD = (Number(ethLates.amount) * priceData.data.ETH.USD).toString()
-
-                    this.streamXRPBufferJson.timestamp = xrpLates.timestamp
-                    this.streamXRPBufferJson.transaction_type = xrpLates.transaction_type
-                    this.streamXRPBufferJson.token = xrpLates.token
-                    this.streamXRPBufferJson.amount = xrpLates.amount
-                    this.streamXRPBufferJson.amountUSD = (Number(xrpLates.amount) * priceData.data.XRP.USD).toString()
-
-                    localBuffer.push(this.streamBTCBufferJson)
-                    localBuffer.push(this.streamETHBufferJson)
-                    localBuffer.push(this.streamXRPBufferJson)
-
-                    resolve(localBuffer)
-
-                } else {
-
-                    resolve(localBuffer)
-
-                }
-            });
+                })
+            } else {
+                resolve(localBuffer)
+            }
         })
     }
 
     private async getLatesfromToken() {
-
-        this.streamBTCBufferJson = {} as streamBufferType
-        this.streamETHBufferJson = {} as streamBufferType
-        this.streamXRPBufferJson = {} as streamBufferType
-
         let localBuffer: any = []
-
         return new Promise(async (resolve) => {
-
-            this.serviceStreamCSVData.on('close', async () => {
-                let priceData = await this.fetchUsd()
-                if (priceData.result) {
-
-                    localBuffer = this.allStreamBufferArray
-                        .filter((t) => t.token === this.args.token)
-                        .reduce((pre, current) => Number(pre.timestamp) > Number(current.timestamp) ? pre : current)
-
-                    localBuffer.amountUSD = (Number(localBuffer.amount) * this.priceTokenType(localBuffer.token, priceData.data)).toString()
-
-                    resolve(localBuffer)
-
-                } else {
-
-                    resolve(localBuffer)
-
-                }
-            });
-
+            let priceData = await this.fetchUsd()
+            if (priceData.result) {
+                this.serviceStreamCSVData.on('data', (data: any[]) => {
+                    data.toString().split(/\n/).map((lines: any, i) => {
+                        let line = lines.split(',');
+                        if (line[2] === this.args.token && Number(line[0]) > Number(this.streamANYBuffer.timestamp)) {
+                            this.streamANYBuffer.timestamp = line[0]
+                            this.streamANYBuffer.transaction_type = line[1]
+                            this.streamANYBuffer.token = line[2]
+                            this.streamANYBuffer.amount = line[3]
+                        }
+                    })
+                })
+                this.serviceStreamCSVData.on('close', async () => {
+                    resolve([{
+                        Token: this.streamANYBuffer.token,
+                        Value: this.streamANYBuffer.amount,
+                        USD: (Number(this.streamANYBuffer.amount) * this.latestPriceTokenType(this.streamANYBuffer.token, priceData.data)).toString()
+                    }])
+                })
+            } else {
+                resolve(localBuffer)
+            }
         })
     }
 
     private async getfromDate() {
-
         const dateObject = new Date(this.args.date);
         let thisTime = dateObject.getTime()
-        let addonedayTime = thisTime + (3600 * 1000 * 24)
+        let addonedayTime = thisTime - (3600 * 1000 * 24)
         let localBuffer: any = []
 
         return new Promise(async (resolve) => {
-            this.serviceStreamCSVData.on('close', async () => {
-                let priceData = await this.fetchUsd()
-                if (priceData.result) {
+            let priceData = await this.fetchUsdwithDate()
+            if (priceData.result) {
+                this.serviceStreamCSVData.on('data', (data: any[]) => {
+                    data.toString().split(/\n/).map((lines: any, i) => {
+                        let line = lines.split(',');
+                        if (Number(line[0]) <= (thisTime / 1000) && Number(line[0]) >= (addonedayTime / 1000)) {
 
-                    let rangeByDate = this.allStreamBufferArray
-                        .filter((o) => Number(o.timestamp) >= (thisTime / 1000) && Number(o.timestamp) <= (addonedayTime / 1000))
-                        .map(obj => ({ ...obj, amountUSD: (Number(obj.amount) * this.priceTokenType(obj.token, priceData.data)).toString() }))
+                            if (line[2] === 'BTC') {
+                                priceData.BTC.map((el: any) => {
 
-                    resolve(rangeByDate)
+                                    if (Number(line[0]) <= Number(el.time) && Number(line[0]) >= (Number(el.time) - 3600)) {
 
-                } else {
+                                        const current = new Date(Number(line[0] * 1000)).toLocaleTimeString('default', {
+                                            year: "2-digit",
+                                            month: "2-digit",
+                                            day: "2-digit"
+                                        });
+                                        let obj = {
+                                            Token: line[2],
+                                            Value: line[3],
+                                            USD: (Number(line[3] * el.open)).toString(),
+                                            Date: current,
+                                        }
+                                        localBuffer.push(obj)
+                                    }
+                                })
+                            }
+                            if (line[2] === 'ETH') {
+                                priceData.ETH.map((el: any) => {
+                                    if (Number(line[0]) <= Number(el.time) && Number(line[0]) >= (Number(el.time) - 3600)) {
 
+                                        const current = new Date(Number(line[0] * 1000)).toLocaleTimeString('default', {
+                                            year: "2-digit",
+                                            month: "2-digit",
+                                            day: "2-digit"
+                                        });
+                                        let obj = {
+                                            Token: line[2],
+                                            Value: line[3],
+                                            USD: (Number(line[3] * el.open)).toString(),
+                                            Date: current,
+                                        }
+                                        localBuffer.push(obj)
+                                    }
+                                })
+                            }
+                            if (line[2] === 'XRP') {
+                                priceData.XRP.map((el: any) => {
+                                    if (Number(line[0]) <= Number(el.time) && Number(line[0]) >= (Number(el.time) - 3600)) {
+
+                                        const current = new Date(Number(line[0] * 1000)).toLocaleTimeString('default', {
+                                            year: "2-digit",
+                                            month: "2-digit",
+                                            day: "2-digit"
+                                        });
+                                        let obj = {
+                                            Token: line[2],
+                                            Value: line[3],
+                                            USD: (Number(line[3] * el.open)).toString(),
+                                            Date: current,
+                                        }
+                                        localBuffer.push(obj)
+                                    }
+                                })
+                            }
+                        }
+                    })
+                })
+                this.serviceStreamCSVData.on('close', async () => {
                     resolve(localBuffer)
-
-                }
-            })
+                })
+            } else {
+                resolve(localBuffer)
+            }
         })
     }
 
-    private async getfromTokenandDate() {
-
+    private async getfromTokenDate() {
         const dateObject = new Date(this.args.date);
         let thisTime = dateObject.getTime()
-        let addonedayTime = thisTime + (3600 * 1000 * 24)
+        let addonedayTime = thisTime - (3600 * 1000 * 24)
         let localBuffer: any = []
 
         return new Promise(async (resolve) => {
-            this.serviceStreamCSVData.on('close', async () => {
-                let priceData = await this.fetchUsd()
-                if (priceData.result) {
+            let priceData = await this.fetchUsdwithTokenDate()
+            if (priceData.result) {
+                this.serviceStreamCSVData.on('data', (data: any[]) => {
+                    data.toString().split(/\n/).map((lines: any, i) => {
+                        let line = lines.split(',');
 
-                    let rangeByDate = this.allStreamBufferArray
-                        .filter((o) => Number(o.timestamp) >= (thisTime / 1000) && Number(o.timestamp) <= (addonedayTime / 1000)).filter((t) => t.token === this.args.token)
+                        if (line[2] === this.args.token && Number(line[0]) <= (thisTime / 1000) && Number(line[0]) >= (addonedayTime / 1000)) {
 
-                    switch (this.args.token) {
-                        case 'BTC':
-                            let btcbuffer = rangeByDate.map(obj => ({ ...obj, amountUSD: (Number(obj.amount) * this.priceTokenType(obj.token, priceData.data)).toString() }))
-                            resolve(btcbuffer)
-                            break;
-                        case 'ETH':
-                            let ethbuffer = rangeByDate.map(obj => ({ ...obj, amountUSD: (Number(obj.amount) * this.priceTokenType(obj.token, priceData.data)).toString() }))
-                            resolve(ethbuffer)
-                            break;
-                        case 'XRP':
-                            let xrpbuffer = rangeByDate.map(obj => ({ ...obj, amountUSD: (Number(obj.amount) * this.priceTokenType(obj.token, priceData.data)).toString() }))
-                            resolve(xrpbuffer)
-                            break;
-                    }
-                } else {
+                            priceData.data.map((el: any) => {
 
+                                if (Number(line[0]) <= Number(el.time) && Number(line[0]) >= (Number(el.time) - 3600)) {
+
+                                    const current = new Date(Number(line[0] * 1000)).toLocaleTimeString('default', {
+                                        year: "2-digit",
+                                        month: "2-digit",
+                                        day: "2-digit"
+                                    });
+                                    let obj = {
+                                        Token: line[2],
+                                        Value: line[3],
+                                        USD: (Number(line[3] * el.open)).toString(),
+                                        Date: current,
+                                    }
+                                    localBuffer.push(obj)
+                                }
+                            })
+                        }
+                    })
+                })
+                this.serviceStreamCSVData.on('close', async () => {
                     resolve(localBuffer)
-
-                }
-            })
+                })
+            } else {
+                resolve(localBuffer)
+            }
         })
     }
 
     private async fetchUsd() {
         try {
+
             const response = await fetch(this.serviceApi)
             const json = await response.json()
             return {
@@ -294,7 +324,83 @@ class Service {
         }
     }
 
-    private priceTokenType(token: string, price: any) {
+    private async fetchUsdwithDate() {
+        try {
+            const dateObject = new Date(this.args.date);
+            let thisTime = dateObject.getTime()
+            const responseBTC = await fetch(this.serviceApiBTCwithDate + Number(thisTime / 1000).toString())
+            const jsonBTC = await responseBTC.json()
+            const listBTCData = jsonBTC.Data.Data
+
+            const responseETH = await fetch(this.serviceApiETHwithDate + Number(thisTime / 1000).toString())
+            const jsonETH = await responseETH.json()
+            const listETHData = jsonETH.Data.Data
+
+            const responseXRP = await fetch(this.serviceApiXRPwithDate + Number(thisTime / 1000).toString())
+            const jsonXRP = await responseXRP.json()
+            const listXRPData = jsonXRP.Data.Data
+
+            return {
+                result: true,
+                BTC: listBTCData,
+                ETH: listETHData,
+                XRP: listXRPData
+            }
+
+
+        } catch (error) {
+            return {
+                result: false,
+                data: error
+            }
+        }
+    }
+
+    private async fetchUsdwithTokenDate() {
+        try {
+            const dateObject = new Date(this.args.date);
+            let thisTime = dateObject.getTime()
+            switch (this.args.token) {
+                case 'BTC':
+                    const responseBTC = await fetch(this.serviceApiBTCwithDate + Number(thisTime / 1000).toString())
+                    const jsonBTC = await responseBTC.json()
+                    const listBTCData = jsonBTC.Data.Data
+                    return {
+                        result: true,
+                        data: listBTCData,
+                    }
+                case 'ETH':
+                    const responseETH = await fetch(this.serviceApiETHwithDate + Number(thisTime / 1000).toString())
+                    const jsonETH = await responseETH.json()
+                    const listETHData = jsonETH.Data.Data
+
+                    return {
+                        result: true,
+                        data: listETHData,
+                    }
+                case 'XRP':
+                    const responseXRP = await fetch(this.serviceApiXRPwithDate + Number(thisTime / 1000).toString())
+                    const jsonXRP = await responseXRP.json()
+                    const listXRPData = jsonXRP.Data.Data
+                    return {
+                        result: true,
+                        data: listXRPData,
+                    }
+                default:
+                    return {
+                        result: true,
+                        data: [],
+                    }
+            }
+        } catch (error) {
+            return {
+                result: false,
+                data: error
+            }
+        }
+    }
+
+    private latestPriceTokenType(token: string, price: any) {
         switch (token) {
             case 'BTC':
                 return price.BTC.USD
@@ -307,7 +413,7 @@ class Service {
 
     private logInfo() {
         console.log('\n')
-        console.log('please wait, it takes time between 1 minute to 3 minutes')
+        console.log('it takes time between 20 second..')
         console.log('\n')
     }
 

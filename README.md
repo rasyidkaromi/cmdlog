@@ -8,23 +8,9 @@
 **Install :**
 
 - install depedencies npm install or yarn
-- make sure to setting --max_old_space_size=8096 | 8 Giga to free unused memory
-    
-    - terminal `export NODE_OPTIONS=--max_old_space_size=8096` or
-    - windows `set NODE_OPTIONS=--max_old_space_size=8096`
-
-- download csv file [transactions.csv](https://s3-ap-southeast-1.amazonaws.com/static.propine.com/transactions.csv.zip) and save the file in the source folder
-- npm start `to build source on dist/ folder`
-- npm build-bin `to build binary app.exe file with max_old_space_size=8096`
-
-
-------------------------------------------------------------
-
-
-**Run command-line :**
-
-- run with node `node dist/app.js`
-- run with binary file `./app or app`
+- download csv file [transactions.csv](https://drive.google.com/file/d/1DY5uUfSqHt1AtbWCuaKJBlbnwlvFI7YS) and save the file in the source folder
+- npm run build 
+- npm build-bin
 
 ------------------------------------------------------------
 
@@ -37,30 +23,11 @@
 
 ```
 [
-    {
-        timestamp: '1571967208',
-        transaction_type: 'DEPOSIT',
-        token: 'BTC',
-        amount: '0.298660',
-        amountUSD: '5003.8272916'
-    },
-    {
-        timestamp: '1571967200',
-        transaction_type: 'DEPOSIT',
-        token: 'ETH',
-        amount: '0.683640',
-        amountUSD: '860.2652304'
-    },
-    {
-        timestamp: '1571967150',
-        transaction_type: 'DEPOSIT',
-        token: 'XRP',
-        amount: '0.693272',
-        amountUSD: '0.2617795072'
-    }
+  { Token: 'BTC', Value: '0.298660', USD: '4898.9498459999995' },
+  { Token: 'ETH', Value: '0.683640', USD: '821.0106216' },
+  { Token: 'XRP', Value: '0.693272', USD: '0.2553320776' }
 ]
-
-time elapsed =>  2:13  minute
+time elapsed =>  0:23  minute
 ```
 
 - $ ./app --token BTC
@@ -69,16 +36,8 @@ time elapsed =>  2:13  minute
 `Given a token, return the latest portfolio value for that token in USD`
 
 ```
-{
-  timestamp: '1571967208',
-  transaction_type: 'DEPOSIT',
-  token: 'BTC',
-  amount: '0.298660',
-  amountUSD: '4993.8371146'
-}
-
-
-time elapsed =>  2:16  minute
+[ { Token: 'BTC', Value: '0.298660', USD: '4901.0225464' } ]
+time elapsed =>  0:20  minute
 ```
 
 - $ ./app --date 10/25/2019 
@@ -90,39 +49,39 @@ time elapsed =>  2:16  minute
 
 ```
 [
-    {
-        timestamp: '1571967208',
-        transaction_type: 'DEPOSIT',
-        token: 'BTC',
-        amount: '0.298660',
-        amountUSD: '4988.5896584'
-    },
-    {
-        timestamp: '1571967200',
-        transaction_type: 'DEPOSIT',
-        token: 'ETH',
-        amount: '0.683640',
-        amountUSD: '856.8880488000001'
-    },
-    {
-        timestamp: '1571967189',
-        transaction_type: 'WITHDRAWAL',
-        token: 'ETH',
-        amount: '0.493839',
-        amountUSD: '618.98767938'
-    },
-    {
-        timestamp: '1571967150',
-        transaction_type: 'DEPOSIT',
-        token: 'XRP',
-        amount: '0.693272',
-        amountUSD: '0.2631660512'
-    },
+  {
+    Token: 'XRP',
+    Value: '0.601717',
+    USD: '0.16715698259999998',
+    Date: '10/24/19, 11:58:30 PM'
+  },
+  {
+    Token: 'BTC',
+    Value: '0.031415',
+    USD: '235.0005358',
+    Date: '10/24/19, 11:58:08 PM'
+  },
+  {
+    Token: 'BTC',
+    Value: '0.740358',
+    USD: '5538.26282616',
+    Date: '10/24/19, 11:57:43 PM'
+  },
+  {
+    Token: 'BTC',
+    Value: '0.761977',
+    USD: '5699.984188040001',
+    Date: '10/24/19, 11:56:22 PM'
+  },
+  {
+    Token: 'ETH',
+    Value: '0.627446',
+    USD: '102.22977678',
+    Date: '10/24/19, 11:55:50 PM'
+  },
     ... more items
 ]
-
-
-time elapsed =>  2:13  minute
+time elapsed =>  0:24  minute
 ```
 
 - $ ./app --date 10/25/2019 --token BTC
@@ -134,39 +93,33 @@ time elapsed =>  2:13  minute
 
 ```
 [
-    {
-        timestamp: '1571967208',
-        transaction_type: 'DEPOSIT',
-        token: 'BTC',
-        amount: '0.298660',
-        amountUSD: '4976.0130858'
-    },
-    {
-        timestamp: '1571966685',
-        transaction_type: 'DEPOSIT',
-        token: 'BTC',
-        amount: '0.658794',
-        amountUSD: '10976.252477220001'
-    },
-    {
-        timestamp: '1571966568',
-        transaction_type: 'DEPOSIT',
-        token: 'BTC',
-        amount: '0.630386',
-        amountUSD: '10502.94309618'
-    },
-    {
-        timestamp: '1571966566',
-        transaction_type: 'DEPOSIT',
-        token: 'BTC',
-        amount: '0.985879',
-        amountUSD: '16425.85818327'
-    },
+  {
+    Token: 'BTC',
+    Value: '0.031415',
+    USD: '235.0005358',
+    Date: '10/24/19, 11:58:08 PM'
+  },
+  {
+    Token: 'BTC',
+    Value: '0.740358',
+    USD: '5538.26282616',
+    Date: '10/24/19, 11:57:43 PM'
+  },
+  {
+    Token: 'BTC',
+    Value: '0.761977',
+    USD: '5699.984188040001',
+    Date: '10/24/19, 11:56:22 PM'
+  },
+  {
+    Token: 'BTC',
+    Value: '0.286457',
+    USD: '2142.8473176400003',
+    Date: '10/24/19, 11:54:23 PM'
+  },
     ... more items
 ]
-
-
-time elapsed =>  2:11  minute
+time elapsed =>  0:21  minute
 ```
 ------------------------------------------------------------
 
